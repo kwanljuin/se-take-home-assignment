@@ -117,62 +117,63 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setBots((prevBots) => {
-        const updatedOrders = [...orders];
-
-        const newBots = prevBots.map((bot) => {
-          if (!bot.currentOrder && updatedOrders.length > 0) {
-            const orderToProcess = updatedOrders.shift();
-            if (orderToProcess) {
-              return {
-                ...bot,
-                currentOrder: {
-                  ...orderToProcess,
-                  progress: 0,
-                  status: "processing" as OrderStatus,
-                },
-              };
-            }
-          }
-
-          if (bot.currentOrder) {
-            const updatedOrder = {
-              ...bot.currentOrder,
-              progress: bot.currentOrder.progress + 10,
-            };
-
-            if (updatedOrder.progress >= 100) {
-              const completedOrder = {
-                ...updatedOrder,
-                completedDateTime: new Date(),
-                status: "completed" as OrderStatus,
-              };
-              setCompletedOrders((prevCompleted) => {
-                const alreadyCompleted = prevCompleted.some(
-                  (order) => order.id === completedOrder.id
-                );
-                if (!alreadyCompleted) {
-                  return [completedOrder, ...prevCompleted];
-                }
-                return prevCompleted;
-              });
-              return { ...bot, currentOrder: null };
+      setOrders((prevOrders) => {
+        const updatedOrders = [...prevOrders];
+        setBots((prevBots) => {
+          const newBots = prevBots.map((bot) => {
+            if (!bot.currentOrder && updatedOrders.length > 0) {
+              const orderToProcess = updatedOrders.shift();
+              if (orderToProcess) {
+                return {
+                  ...bot,
+                  currentOrder: {
+                    ...orderToProcess,
+                    progress: 0,
+                    status: "processing" as OrderStatus,
+                  },
+                };
+              }
             }
 
-            return { ...bot, currentOrder: updatedOrder };
-          }
+            if (bot.currentOrder) {
+              const updatedOrder = {
+                ...bot.currentOrder,
+                progress: bot.currentOrder.progress + 10,
+              };
 
-          return bot;
+              if (updatedOrder.progress >= 100) {
+                const completedOrder = {
+                  ...updatedOrder,
+                  completedDateTime: new Date(),
+                  status: "completed" as OrderStatus,
+                };
+                setCompletedOrders((prevCompleted) => {
+                  const alreadyCompleted = prevCompleted.some(
+                    (order) => order.id === completedOrder.id
+                  );
+                  if (!alreadyCompleted) {
+                    return [completedOrder, ...prevCompleted];
+                  }
+                  return prevCompleted;
+                });
+                return { ...bot, currentOrder: null };
+              }
+
+              return { ...bot, currentOrder: updatedOrder };
+            }
+
+            return bot;
+          });
+
+          return newBots;
         });
 
-        setOrders(updatedOrders);
-
-        return newBots;
+        return updatedOrders;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [orders]);
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
